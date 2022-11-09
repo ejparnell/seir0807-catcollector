@@ -4,6 +4,8 @@ import boto3
 from django.shortcuts import render, redirect
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic import ListView, DetailView
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
 from .models import Cat, Toy, Photo
 from .forms import FeedingForm
 
@@ -113,3 +115,21 @@ def add_photo(request, cat_id):
       print('An error occurred uploading file to S3')
       print(e)
   return redirect('detail', cat_id=cat_id)
+
+
+def signup(request):
+  error_message = ''
+  if request.method == 'POST':
+    form = UserCreationForm(request.POST)
+    if form.is_valid():
+      # Save the user to the db
+      user = form.save()
+      # Automatically log in the new user
+      login(request, user)
+      return redirect('index')
+    else:
+      error_message = 'Invalid sign up - try again'
+  # A bad POST or a GET request, so render signup template
+  form = UserCreationForm()
+  context = {'form': form, 'error_message': error_message}
+  return render(request, 'registration/signup.html', context)
